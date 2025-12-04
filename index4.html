@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الواجهة الرئيسية - فاست كوينز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo",sans-serif;
+      background:#e6e7ea;
+      color:#222;
+    }
+
+    .app{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+
+    .shell{
+      width:1100px;
+      max-width:100%;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      background:#e6e7ea;
+    }
+
+    /* الشريط العلوي الأبيض + القوائم */
+    .top-tabs{
+      background:#ffffff;
+      border-bottom:2px solid #007D71;
+      display:flex;
+      justify-content:flex-end;
+      gap:40px;
+      padding:10px 40px 8px;
+      font-size:0.95rem;
+    }
+    .tab-item{
+      cursor:pointer;
+      position:relative;
+      padding-bottom:4px;
+      color:#333;
+      font-weight:500;
+    }
+    .tab-item::after{
+      content:"";
+      position:absolute;
+      left:0;right:0;
+      bottom:-6px;
+      height:3px;
+      background:transparent;
+      border-radius:999px;
+      transition:.2s;
+    }
+    .tab-item:hover{
+      color:#007D71;
+    }
+    .tab-item.active{
+      color:#007D71;
+      font-weight:700;
+    }
+    .tab-item.active::after{
+      background:#f1b91d;
+    }
+
+    /* الشريط الأخضر (اسم الصفحة + X) */
+    .top-green{
+      background:#007D71;
+      min-height:26px;
+      display:flex;
+      align-items:center;
+      padding:0 24px;
+      color:#ffffff;
+      font-size:0.9rem;
+    }
+    .top-green-inner{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      width:100%;
+      justify-content:space-between;
+    }
+    #moduleTitle{
+      font-weight:600;
+    }
+    #btnCloseModule{
+      border:none;
+      background:rgba(0,0,0,0.12);
+      color:#fff;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      font-size:1rem;
+      cursor:pointer;
+      line-height:24px;
+      text-align:center;
+      padding:0;
+    }
+    #btnCloseModule:hover{
+      background:rgba(0,0,0,0.25);
+    }
+
+    /* شريط الترحيب الأصفر */
+    .welcome-bar{
+      background:#d2aa20;
+      color:#fff;
+      text-align:center;
+      padding:6px 10px;
+      font-size:1rem;
+      font-weight:600;
+    }
+
+    /* المنطقة الوسطى */
+    .main-area{
+      flex:1;
+      background:#dedfe2;
+      padding:30px 40px 40px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    /* القوائم الفرعية */
+    .sub-menu{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      min-height:26px;
+    }
+    .sub-chip{
+      border-radius:14px;
+      border:1px solid #cfd1d8;
+      background:#f5f6fa;
+      padding:4px 12px;
+      font-size:0.8rem;
+      cursor:pointer;
+      color:#333;
+    }
+    .sub-chip:hover{
+      background:#e4e7f2;
+    }
+    .sub-chip.active{
+      background:#007D71;
+      color:#ffffff;
+      border-color:#007D71;
+    }
+
+    .module-wrapper{
+      flex:1;
+      background:#e7e8ec;
+      border-radius:4px;
+      border:1px solid #cfd1d8;
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* الشاشة الافتراضية – صورة مليانة الشاشة */
+    .placeholder{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2.0rem;
+      color:#ffffff;
+      text-shadow:0 0 6px rgba(0,0,0,0.5);
+      /* 👇 غيّر الرابط إلى صورة "ملان الشاه" الخاصة بك */
+      background:url("صوره.jpg") center/cover no-repeat;
+    }
+
+    /* الإطار الداخلي */
+    .module-frame{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:none;
+      display:none;
+      background:#ffffff;
+    }
+
+    /* الشريط السفلي */
+    .bottom-bar{
+      background:#007D71;
+      color:#ffffff;
+      padding:6px 0;
+      overflow:hidden;
+    }
+    .ticker{
+      width:100%;
+      position:relative;
+      height:24px;
+    }
+    .ticker-track{
+      position:absolute;
+      white-space:nowrap;
+      will-change:transform;
+      animation:scrollText 20s linear infinite;
+      font-size:0.9rem;
+      padding-inline:40px;
+    }
+
+    /* حركة من اليسار لليمين */
+    @keyframes scrollText{
+      0%{transform:translateX(-100%);}
+      100%{transform:translateX(100%);}
+    }
+
+    @media (max-width:900px){
+      .shell{
+        width:100%;
+      }
+      .top-tabs{
+        gap:20px;
+        padding:8px 14px 6px;
+        font-size:0.85rem;
+      }
+      .main-area{
+        padding:14px;
+      }
+      .placeholder{
+        font-size:1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="shell">
+
+    <!-- شريط التابات العلوي -->
+    <nav class="top-tabs">
+      <div class="tab-item" data-module="reports">التقارير</div>
+      <div class="tab-item" data-module="cards">البطاق</div>
+      <div class="tab-item" data-module="trade">البيع والشراء</div>
+      <div class="tab-item" data-module="settings">الإعدادات</div>
+    </nav>
+
+    <!-- الشريط الأخضر -->
+    <div class="top-green">
+      <div class="top-green-inner">
+        <div id="moduleTitle"></div>
+        <button id="btnCloseModule" style="display:none;">×</button>
+      </div>
+    </div>
+
+    <!-- شريط الترحيب -->
+    <div class="welcome-bar">
+      مرحباً بك في فاست كوينز
+    </div>
+
+    <!-- المنطقة الوسطى -->
+    <main class="main-area">
+      <!-- القوائم الفرعية -->
+      <div id="subMenu" class="sub-menu"></div>
+
+      <div class="module-wrapper">
+        <div class="placeholder" id="modulePlaceholder">
+        
+        </div>
+        <iframe id="moduleFrame" class="module-frame"></iframe>
+      </div>
+    </main>
+
+    <!-- الشريط السفلي المتحرك -->
+    <footer class="bottom-bar">
+      <div class="ticker">
+        <div class="ticker-track">
+          هان اكتب عن فاست كوينز - نظام لإدارة عمليات البيع والشراء والبطاقات والتحويلات المالية - نسخة تجريبية للاستخدام على أجهزة الكمبيوتر - فاست كوينز ترحب بكم دائمًا 🌟
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  const tabs          = document.querySelectorAll('.tab-item');
+  const frame         = document.getElementById('moduleFrame');
+  const placeholder   = document.getElementById('modulePlaceholder');
+  const moduleTitleEl = document.getElementById('moduleTitle');
+  const btnClose      = document.getElementById('btnCloseModule');
+  const subMenuEl     = document.getElementById('subMenu');
+
+  /* ================= القوائم الفرعية ================= */
+
+  // تعريف العناصر الفرعية لكل تبويب رئيسي
+  const SUB_MENUS = {
+    settings: [
+      { key:"settings-pass",   label:"تغيير كلمة المرور" },
+      { key:"settings-license",label:"ارسال الرسالة" }
+   
+    
+    ],
+    trade: [
+      { key:"trade-sell", label:"بيع عملات" },
+      { key:"trade-buy",  label:"شراء عملات" }
+    ],
+    cards: [
+      { key:"cards-request", label:"طلب إنشاء بطاقة" }
+    ],
+    reports: [
+    
+      { key:"rep-total",   label:"التقرير الإجمالي" }
+    ]
+  };
+
+  // هنا تربط كل مفتاح بصفحة HTML وعنوان يظهر في الشريط الأخضر
+  const PAGE_MAP = {
+    "settings-pass"   : { title:"تغيير كلمة المرور",      src:"index6.html" },
+    
+  
+    
+    "settings-license": { title:"ارسال الرسالة",          src:"index1.html" },
+    "trade-sell"      : { title:"بيع عملات",           src:"index2.html" },
+    "trade-buy"       : { title:"شراء عملات",            src:"index2.html" },
+    "cards-request"   : { title:"طلب إنشاء بطاقة",       src:"index3.html" },
+  
+    "rep-total"       : { title:"التقرير الإجمالي",      src:"index5.html" }
+  };
+
+  let currentSubKey = null;
+
+  function clearActiveTabs(){
+    tabs.forEach(t=>t.classList.remove('active'));
+  }
+  function clearActiveSub(){
+    const chips = subMenuEl.querySelectorAll('.sub-chip');
+    chips.forEach(c=>c.classList.remove('active'));
+  }
+
+  function closeModule(){
+    frame.style.display       = "none";
+    frame.src                 = "";
+    placeholder.style.display = "flex";
+    moduleTitleEl.textContent = "";
+    btnClose.style.display    = "none";
+    clearActiveTabs();
+    clearActiveSub();
+  }
+
+  function renderSubMenu(mainKey){
+    subMenuEl.innerHTML = "";
+    clearActiveSub();
+    currentSubKey = null;
+
+    const items = SUB_MENUS[mainKey] || [];
+    items.forEach(item=>{
+      const chip = document.createElement('div');
+      chip.className = "sub-chip";
+      chip.textContent = item.label;
+      chip.dataset.subKey = item.key;
+      chip.addEventListener('click', ()=>{
+        openPage(item.key);
+      });
+      subMenuEl.appendChild(chip);
+    });
+  }
+
+  function openPage(subKey){
+    const cfg = PAGE_MAP[subKey];
+    if(!cfg) return;
+
+    currentSubKey = subKey;
+    clearActiveSub();
+    const chip = subMenuEl.querySelector(`[data-sub-key="${subKey}"]`);
+    if(chip) chip.classList.add('active');
+
+    placeholder.style.display = "none";
+    frame.style.display       = "block";
+    frame.src                 = cfg.src;
+
+    moduleTitleEl.textContent = cfg.title;
+    btnClose.style.display    = "inline-block";
+  }
+
+  tabs.forEach(t=>{
+    t.addEventListener('click', ()=>{
+      const mainKey = t.dataset.module;
+      clearActiveTabs();
+      t.classList.add('active');
+      renderSubMenu(mainKey);
+      // عند اختيار تبويب جديد لا نفتح صفحة مباشرة، ننتظر اختيار العنصر الفرعي
+      frame.style.display       = currentSubKey ? "block" : "none";
+      placeholder.style.display = currentSubKey ? "none"  : "flex";
+      moduleTitleEl.textContent = "";
+      btnClose.style.display    = "none";
+    });
+  });
+
+  btnClose.addEventListener('click', ()=>{
+    closeModule();
+  });
+
+  // يمكنك لو حبيت تبدأ تبويب معيّن وتظهر قائمته الفرعية من أول ما يفتح:
+  // document.querySelector('.tab-item[data-module="trade"]').click();
+</script>
+
+</body>
+</html>

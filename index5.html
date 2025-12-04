@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقارير العمليات - فاست كوينز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo","Tahoma",sans-serif;
+      background:#e0e0e0;
+      color:#222;
+      direction:rtl;
+    }
+
+    .app{
+      max-width:1100px;
+      margin:30px auto;
+      background:#dcdcdc;
+      padding:18px;
+      border:1px solid #bfbfbf;
+    }
+
+    /* شريط العنوان */
+    .main-title-box{
+      border:1px solid #bfbfbf;
+      background:#ffffff;
+      padding:10px;
+      text-align:center;
+      margin-bottom:8px;
+    }
+    .main-title-box h1{
+      font-size:1.4rem;
+      font-weight:700;
+    }
+
+    /* لوحة الفلترة */
+    .filter-panel{
+      border:1px solid #bfbfbf;
+      background:#e6e6e6;
+      padding:14px 16px;
+      margin-bottom:12px;
+    }
+    .filter-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+      font-size:0.95rem;
+    }
+    .filter-row label{
+      min-width:100px;
+    }
+    select,input[type="date"],input[type="month"],input[type="number"]{
+      font-family:"Cairo","Tahoma",sans-serif;
+      font-size:0.9rem;
+      border:1px solid #9c9c9c;
+      background:#ffffff;
+      padding:4px 6px;
+      min-width:150px;
+    }
+    input[type="number"]{
+      width:100px;
+      text-align:center;
+    }
+
+    .filter-buttons{
+      display:flex;
+      justify-content:flex-start;
+      gap:8px;
+      margin-top:6px;
+    }
+    .btn{
+      min-width:120px;
+      padding:7px 0;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:0.9rem;
+      color:#fff;
+      background:linear-gradient(to top,#007243,#62c392);
+    }
+    .btn:active{transform:scale(0.97);}
+    .btn-exit{margin-right:auto;}
+
+    .status-line{
+      margin-top:6px;
+      font-size:0.8rem;
+      color:#444;
+    }
+
+    /* منطقة الجدول */
+    .table-area{
+      border:1px solid #bfbfbf;
+      background:#f5f5f5;
+      padding:8px;
+      margin-top:10px;
+    }
+    .grid-box{
+      width:100%;
+      height:360px;
+      background:#ffffff;
+      border:1px solid #bfbfbf;
+      overflow:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.85rem;
+      min-width:900px;
+    }
+    thead{
+      background:#d0d0d0;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    th,td{
+      border:1px solid #bfbfbf;
+      padding:4px 5px;
+      vertical-align:top;
+      white-space:nowrap;
+    }
+    th{text-align:center;font-weight:600;}
+    tbody tr:nth-child(even){background:#fafafa;}
+
+    .status-ok{color:#006c3c;font-weight:600;font-size:0.8rem;}
+    .status-pending{color:#a04b00;font-weight:600;font-size:0.8rem;}
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      bottom:10px;
+      left:0;right:0;
+      margin:auto;
+      max-width:320px;
+      background:#333;
+      color:#fff;
+      padding:8px 12px;
+      text-align:center;
+      border-radius:999px;
+      font-size:0.8rem;
+      opacity:0;
+      transform:translateY(10px);
+      transition:.25s;
+      z-index:100;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- العنوان -->
+  <div class="main-title-box">
+    <h1>تقارير العمليات (شراء / بطاقات)</h1>
+  </div>
+
+  <!-- لوحة الفلترة -->
+  <div class="filter-panel">
+    <div class="filter-row">
+      <label for="opType">نوع العملية:</label>
+      <select id="opType">
+        <option value="all">كل العمليات</option>
+        <option value="buy">شراء عملات (buyRequests)</option>
+        <option value="card">بطاقات إلكترونية (cardRequests)</option>
+      </select>
+    </div>
+
+    <div class="filter-row">
+      <label for="rangeType">نطاق التاريخ:</label>
+      <select id="rangeType">
+        <option value="day">يومي</option>
+        <option value="month">شهري</option>
+        <option value="year">سنوي</option>
+        <option value="all">كل السنوات</option>
+      </select>
+
+      <!-- يوم -->
+      <div id="dayBox">
+        <span>اليوم:</span>
+        <input type="date" id="dayInput">
+      </div>
+
+      <!-- شهر -->
+      <div id="monthBox" style="display:none;">
+        <span>الشهر:</span>
+        <input type="month" id="monthInput">
+      </div>
+
+      <!-- سنة -->
+      <div id="yearBox" style="display:none;">
+        <span>السنة:</span>
+        <input type="number" id="yearInput" min="2020" max="2100" step="1">
+      </div>
+    </div>
+
+    <div class="filter-buttons">
+      <button class="btn" id="btnShow">عرض التقرير</button>
+      <button class="btn" id="btnReload">تحديث من القاعدة</button>
+      <button class="btn btn-exit" id="btnExit">خروج</button>
+    </div>
+
+    <div class="status-line" id="statusLine">جاهز.</div>
+  </div>
+
+  <!-- الجدول -->
+  <div class="table-area">
+    <div class="grid-box">
+      <table>
+        <thead>
+        <tr>
+          <th style="width:40px;">م</th>
+          <th style="width:110px;">التاريخ</th>
+          <th style="width:80px;">الوقت</th>
+          <th style="width:90px;">النوع</th>
+          <th style="width:130px;">الرقم المرجعي</th>
+          <th style="width:190px;">اسم العميل</th>
+          <th style="width:110px;">المبلغ / الرصيد</th>
+          <th style="width:120px;">طريقة الدفع / نوع البطاقة</th>
+          <th style="width:80px;">الحالة</th>
+        </tr>
+        </thead>
+        <tbody id="rowsBody">
+        <!-- الصفوف من الجافاسكربت -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- سكربت التقارير -->
+<script type="module">
+  import {
+    initializeApp,
+    getApps,
+    getApp
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref as dbRef,
+    get
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  /* إعدادات Firebase نفس مشروعك */
+  const firebaseConfig = {
+    apiKey: "AIzaSyChQZ5_9wKz73-fONcTmipi54HUajwczkY",
+    authDomain: "fast-queens.firebaseapp.com",
+    projectId: "fast-queens",
+    storageBucket: "fast-queens.firebasestorage.app",
+    messagingSenderId: "651828148450",
+    appId: "1:651828148450:web:333947765bdd2d1e10c6bb",
+    measurementId: "G-L8X6CDY98L",
+    databaseURL: "https://fast-queens-default-rtdb.firebaseio.com"
+  };
+
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  /* عناصر الصفحة */
+  const opType     = document.getElementById("opType");
+  const rangeType  = document.getElementById("rangeType");
+  const dayBox     = document.getElementById("dayBox");
+  const monthBox   = document.getElementById("monthBox");
+  const yearBox    = document.getElementById("yearBox");
+  const dayInput   = document.getElementById("dayInput");
+  const monthInput = document.getElementById("monthInput");
+  const yearInput  = document.getElementById("yearInput");
+  const btnShow    = document.getElementById("btnShow");
+  const btnReload  = document.getElementById("btnReload");
+  const btnExit    = document.getElementById("btnExit");
+  const rowsBody   = document.getElementById("rowsBody");
+  const statusLine = document.getElementById("statusLine");
+  const toast      = document.getElementById("toast");
+
+  let allOps = []; // كل العمليات (شراء + بطاقات)
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),2300);
+  }
+
+  function setStatus(text){
+    statusLine.textContent = text;
+  }
+
+  /* ضبط تاريخ اليوم افتراضي */
+  (function setToday(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    dayInput.value   = `${yyyy}-${mm}-${dd}`;
+    monthInput.value = `${yyyy}-${mm}`;
+    yearInput.value  = yyyy;
+  })();
+
+  /* تغيير نوع النطاق (يومي / شهري / سنوي / الكل) */
+  rangeType.addEventListener("change", ()=>{
+    const v = rangeType.value;
+    dayBox.style.display   = (v === "day")   ? "inline-flex" : "none";
+    monthBox.style.display = (v === "month") ? "inline-flex" : "none";
+    yearBox.style.display  = (v === "year")  ? "inline-flex" : "none";
+  });
+
+  function dateKey(ts){
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  function monthKey(ts){
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    return `${yyyy}-${mm}`;
+  }
+  function yearKey(ts){
+    return new Date(ts).getFullYear().toString();
+  }
+  function formatDate(ts){
+    if(!ts) return "-";
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  function formatTime(ts){
+    if(!ts) return "-";
+    const d = new Date(ts);
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mi = String(d.getMinutes()).padStart(2,"0");
+    return `${hh}:${mi}`;
+  }
+
+  /* تحميل العمليات من القاعدة (شراء + بطاقات) */
+  async function reloadFromDb(){
+    setStatus("جاري تحميل البيانات من القاعدة ...");
+    rowsBody.innerHTML = "";
+    allOps = [];
+
+    try{
+      // شراء عملات
+      const buySnap = await get(dbRef(db,"buyRequests"));
+      if(buySnap.exists()){
+        buySnap.forEach(child=>{
+          const v = child.val() || {};
+          allOps.push({
+            src: "buy",
+            createdAt: v.createdAt || 0,
+            refCode:   v.refCode   || "",
+            customer:  v.fullName  || "",
+            amount:    v.amount    ?? "",
+            payMethod: v.payMethod || "",
+            status:    v.status    || "",
+          });
+        });
+      }
+
+      // بطاقات إلكترونية (لو موجودة في القاعدة)
+      const cardSnap = await get(dbRef(db,"cardRequests"));
+      if(cardSnap.exists()){
+        cardSnap.forEach(child=>{
+          const v = child.val() || {};
+          allOps.push({
+            src: "card",
+            createdAt: v.createdAt || 0,
+            refCode:   v.refCode   || "",
+            customer:  v.name      || "",
+            amount:    v.balance   ?? "",
+            payMethod: v.type      || v.cardTemplate || "",
+            status:    v.status    || "",
+          });
+        });
+      }
+
+      // ممكن لاحقاً تضيف بيع / سويفت بنفس الأسلوب
+
+      // ترتيب حسب التاريخ الأقدم -> الأحدث
+      allOps.sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+
+      setStatus("تم التحميل. إجمالي العمليات: " + allOps.length);
+      showReport(); // نعرض مباشرة حسب الفلاتر الحالية
+    }catch(err){
+      console.error("Load error:",err);
+      setStatus("حدث خطأ أثناء تحميل البيانات.");
+      showToast("خطأ في الاتصال بقاعدة البيانات.");
+    }
+  }
+
+  function renderRows(list){
+    rowsBody.innerHTML = "";
+    if(!list || list.length === 0){
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 9;
+      td.textContent = "لا توجد عمليات مطابقة لخيارات البحث الحالية.";
+      td.style.textAlign = "center";
+      rowsBody.appendChild(tr);
+      tr.appendChild(td);
+      return;
+    }
+
+    let totalAmount = 0;
+
+    list.forEach((op,idx)=>{
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = idx + 1;
+      tdIndex.style.textAlign = "center";
+
+      const tdDate  = document.createElement("td");
+      tdDate.textContent = formatDate(op.createdAt);
+      tdDate.style.textAlign = "center";
+
+      const tdTime  = document.createElement("td");
+      tdTime.textContent = formatTime(op.createdAt);
+      tdTime.style.textAlign = "center";
+
+      const tdType  = document.createElement("td");
+      tdType.textContent = (op.src === "buy") ? "شراء عملات" :
+                           (op.src === "card") ? "بطاقة إلكترونية" : op.src;
+
+      const tdRef   = document.createElement("td");
+      tdRef.textContent = op.refCode || "-";
+
+      const tdName  = document.createElement("td");
+      tdName.textContent = op.customer || "-";
+
+      const tdAmount = document.createElement("td");
+      tdAmount.textContent = op.amount !== "" && op.amount !== null ? op.amount : "-";
+      tdAmount.style.textAlign = "center";
+
+      const numAmount = Number(op.amount);
+      if(!isNaN(numAmount)) totalAmount += numAmount;
+
+      const tdPay   = document.createElement("td");
+      tdPay.textContent = op.payMethod || "-";
+
+      const tdStatus = document.createElement("td");
+      tdStatus.textContent = op.status === "approved" ? "معتمَد" :
+                             op.status === "pending"  ? "قيد المعالجة" :
+                             (op.status || "-");
+      tdStatus.className = (op.status === "approved" ? "status-ok" : "status-pending");
+      tdStatus.style.textAlign = "center";
+
+      tr.appendChild(tdIndex);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdTime);
+      tr.appendChild(tdType);
+      tr.appendChild(tdRef);
+      tr.appendChild(tdName);
+      tr.appendChild(tdAmount);
+      tr.appendChild(tdPay);
+      tr.appendChild(tdStatus);
+
+      rowsBody.appendChild(tr);
+    });
+
+    setStatus(`عدد العمليات: ${list.length} | إجمالي المبالغ (بدون عملة محددة): ${totalAmount}`);
+  }
+
+  function showReport(){
+    if(allOps.length === 0){
+      renderRows([]);
+      return;
+    }
+
+    const typeFilter = opType.value;    // all, buy, card
+    const range      = rangeType.value; // day, month, year, all
+
+    const dayVal   = dayInput.value;
+    const monthVal = monthInput.value;
+    const yearVal  = yearInput.value;
+
+    const filtered = allOps.filter(op=>{
+      // نوع العملية
+      if(typeFilter !== "all" && op.src !== typeFilter){
+        return false;
+      }
+
+      const ts = op.createdAt || 0;
+      if(!ts) return false;
+
+      if(range === "day" && dayVal){
+        return dateKey(ts) === dayVal;
+      }
+      if(range === "month" && monthVal){
+        return monthKey(ts) === monthVal;
+      }
+      if(range === "year" && yearVal){
+        return yearKey(ts) === yearVal.toString();
+      }
+      // الكل
+      return true;
+    });
+
+    renderRows(filtered);
+  }
+
+  /* أزرار */
+  btnShow.addEventListener("click", showReport);
+  btnReload.addEventListener("click", reloadFromDb);
+
+  btnExit.addEventListener("click", ()=>{
+    if(window.top !== window){
+      // لو داخل iframe
+      window.top.postMessage({type:"closeModule"},"*");
+    }else{
+      window.close();
+    }
+  });
+
+  // عرض التقرير عند الضغط Enter في أي حقل تاريخ
+  [dayInput,monthInput,yearInput].forEach(inp=>{
+    inp.addEventListener("keydown",e=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        showReport();
+      }
+    });
+  });
+
+  // تحميل أولي من القاعدة
+  reloadFromDb();
+</script>
+
+</body>
+</html>

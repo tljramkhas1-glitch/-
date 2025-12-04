@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ارسال الرسائل القصيره - فاست كوينز</title>
+
+  <!-- خط كايرو -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo",sans-serif;
+      background:#e0e0e0;
+      color:#222;
+      direction:rtl;
+    }
+
+    .app{
+      max-width:1000px;
+      margin:30px auto;
+      background:#dcdcdc;
+      padding:20px;
+      border:1px solid #bfbfbf;
+    }
+
+    /* عنوان كبير أعلى النموذج */
+    .main-title-box{
+      border:1px solid #bfbfbf;
+      background:#ffffff;
+      padding:10px;
+      text-align:center;
+      margin-bottom:8px;
+    }
+    .main-title-box h1{
+      font-size:1.4rem;
+      font-weight:700;
+    }
+
+    /* إطار النموذج */
+    .form-panel{
+      border:1px solid #bfbfbf;
+      background:#e6e6e6;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .form-row{
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .form-row label{
+      width:100px;
+      font-size:1rem;
+      margin-top:4px;
+    }
+
+    textarea,
+    input[type="text"],
+    input[type="date"]{
+      font-family:"Cairo",sans-serif;
+      font-size:0.95rem;
+      border:1px solid #9c9c9c;
+      background:#ffffff;
+      padding:6px 8px;
+      outline:none;
+    }
+
+    #msgBody{
+      width:100%;
+      min-height:120px;
+      resize:vertical;
+    }
+    #msgTitle{
+      width:60%;
+    }
+
+    .date-row{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:-4px;
+    }
+    .date-row input{
+      width:140px;
+      text-align:center;
+    }
+
+    /* أزرار أسفل النموذج */
+    .buttons-row{
+      display:flex;
+      justify-content:space-between;
+      margin-top:20px;
+    }
+    .btn{
+      min-width:120px;
+      padding:8px 0;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:1rem;
+      color:#fff;
+      background:linear-gradient(to top,#007243,#62c392);
+    }
+    .btn:active{
+      transform:scale(0.97);
+    }
+
+    /* زر خروج على اليسار */
+    .btn-exit{
+      margin-left:auto;
+      margin-right:0;
+    }
+
+    /* حالة/رسالة نصية صغيرة */
+    .status{
+      margin-top:8px;
+      font-size:0.85rem;
+    }
+    .status.ok{color:#007a3c;}
+    .status.err{color:#b01919;}
+
+    /* منطقة البحث والجدول */
+    .table-area{
+      margin-top:20px;
+      border:1px solid #bfbfbf;
+      background:#f5f5f5;
+      padding:10px;
+    }
+
+    .search-bar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+      font-size:0.9rem;
+    }
+    .search-bar input[type="date"]{
+      width:160px;
+    }
+    .search-bar button{
+      min-width:90px;
+      padding:5px 0;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:0.85rem;
+      color:#fff;
+      background:linear-gradient(to top,#007243,#62c392);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.9rem;
+      background:#ffffff;
+    }
+    thead{
+      background:#d0d0d0;
+    }
+    th,td{
+      border:1px solid #bfbfbf;
+      padding:6px 5px;
+      vertical-align:top;
+    }
+    th{
+      text-align:center;
+      font-weight:600;
+    }
+    td.body-cell{
+      max-width:400px;
+    }
+
+    /* شريط صغير أسفل (رسالة عائمة) */
+    .toast{
+      position:fixed;
+      bottom:10px;
+      left:0;right:0;
+      margin:auto;
+      max-width:320px;
+      background:#333;
+      color:#fff;
+      padding:8px 12px;
+      text-align:center;
+      border-radius:999px;
+      font-size:0.8rem;
+      opacity:0;
+      transform:translateY(10px);
+      transition:.25s;
+      z-index:100;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- العنوان العلوي -->
+  <div class="main-title-box">
+    <h1>ارسل الرسائل القصيره</h1>
+  </div>
+
+  <!-- إطار النموذج -->
+  <div class="form-panel">
+
+    <!-- نص الرسالة -->
+    <div class="form-row">
+      <label for="msgBody">نص الرساله</label>
+      <textarea id="msgBody"></textarea>
+    </div>
+
+    <!-- عنوان الرسالة -->
+    <div class="form-row">
+      <label for="msgTitle">عنوان الرساله</label>
+      <input type="text" id="msgTitle">
+    </div>
+
+    <!-- تاريخ اليوم -->
+    <div class="date-row">
+      <input type="date" id="msgDate" readonly>
+    </div>
+
+    <!-- أزرار -->
+    <div class="buttons-row">
+      <button class="btn" id="btnSend">ارسال</button>
+      <button class="btn" id="btnRefresh">تحديث</button>
+      <button class="btn btn-exit" id="btnExit">خروج</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+  </div>
+
+  <!-- منطقة البحث والجدول -->
+  <div class="table-area">
+    <div class="search-bar">
+      <span>بحث بالتاريخ:</span>
+      <input type="date" id="searchDate">
+      <button id="btnSearch">بحث</button>
+      <span style="font-size:0.8rem;color:#666;">(اترك التاريخ فارغ ثم تحديث لعرض كل الرسائل)</span>
+    </div>
+
+    <table>
+      <thead>
+      <tr>
+        <th style="width:40px;">م</th>
+        <th style="width:110px;">التاريخ</th>
+        <th style="width:200px;">عنوان الرسالة</th>
+        <th>نص الرسالة</th>
+      </tr>
+      </thead>
+      <tbody id="messagesBody">
+      <!-- يتم تعبئتها من القاعدة -->
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- سكربت: Firebase + إرسال + تحميل + بحث -->
+<script type="module">
+  /*************** Firebase *****************/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    get
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyChQZ5_9wKz73-fONcTmipi54HUajwczkY",
+    authDomain: "fast-queens.firebaseapp.com",
+    projectId: "fast-queens",
+    storageBucket: "fast-queens.firebasestorage.app",
+    messagingSenderId: "651828148450",
+    appId: "1:651828148450:web:333947765bdd2d1e10c6bb",
+    measurementId: "G-L8X6CDY98L",
+    databaseURL: "https://fast-queens-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  const ROOT_PATH = "systemMessages";
+
+  /*************** عناصر الصفحة *****************/
+  const msgBody    = document.getElementById("msgBody");
+  const msgTitle   = document.getElementById("msgTitle");
+  const msgDate    = document.getElementById("msgDate");
+  const statusBox  = document.getElementById("statusBox");
+  const btnSend    = document.getElementById("btnSend");
+  const btnRefresh = document.getElementById("btnRefresh");
+  const btnExit    = document.getElementById("btnExit");
+  const messagesBody = document.getElementById("messagesBody");
+  const searchDate = document.getElementById("searchDate");
+  const btnSearch  = document.getElementById("btnSearch");
+  const toast      = document.getElementById("toast");
+
+  let allMessages = []; // نخزن فيها كل الرسائل للبحث/التصفية
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 2300);
+  }
+
+  function setStatus(text, ok=true){
+    statusBox.textContent = text;
+    statusBox.className = "status " + (ok ? "ok" : "err");
+  }
+
+  // ضبط تاريخ اليوم في حقل التاريخ
+  function setToday(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    msgDate.value = `${yyyy}-${mm}-${dd}`;
+  }
+  setToday();
+
+  // تحويل timestamp إلى نص تاريخ dd/mm/yyyy
+  function formatDate(ts){
+    if(!ts) return "-";
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  // مفتاح اليوم من timestamp بصيغة yyyy-mm-dd (للبحث)
+  function dayKey(ts){
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,"0");
+    const dd   = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // تحميل الرسائل من القاعدة
+  async function loadMessages(){
+    messagesBody.innerHTML = "";
+    setStatus("جاري تحميل الرسائل ...", true);
+    try{
+      const rootRef = ref(db, ROOT_PATH);
+      const snap = await get(rootRef);
+
+      allMessages = [];
+
+      if(snap.exists()){
+        snap.forEach(child=>{
+          const val = child.val() || {};
+          allMessages.push({
+            id: child.key,
+            title: val.title || "",
+            body:  val.body  || "",
+            createdAt: val.createdAt || 0
+          });
+        });
+
+        // ترتيب حسب التاريخ تصاعدياً
+        allMessages.sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+      }
+
+      renderTable(allMessages);
+      setStatus("تم تحميل الرسائل (" + allMessages.length + ") بنجاح.", true);
+    }catch(err){
+      console.error("خطأ في تحميل الرسائل:", err);
+      setStatus("حدث خطأ أثناء تحميل الرسائل.", false);
+    }
+  }
+
+  function renderTable(list){
+    messagesBody.innerHTML = "";
+    if(!list || list.length===0){
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.textContent = "لا توجد رسائل.";
+      td.style.textAlign = "center";
+      messagesBody.appendChild(tr);
+      tr.appendChild(td);
+      return;
+    }
+
+    list.forEach((m,idx)=>{
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = idx+1;
+      tdIndex.style.textAlign = "center";
+
+      const tdDate = document.createElement("td");
+      tdDate.textContent = formatDate(m.createdAt);
+      tdDate.style.textAlign = "center";
+
+      const tdTitle = document.createElement("td");
+      tdTitle.textContent = m.title;
+
+      const tdBody = document.createElement("td");
+      tdBody.textContent = m.body;
+      tdBody.className = "body-cell";
+
+      tr.appendChild(tdIndex);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdTitle);
+      tr.appendChild(tdBody);
+
+      messagesBody.appendChild(tr);
+    });
+  }
+
+  // إرسال رسالة جديدة
+  async function sendMessage(){
+    const title = (msgTitle.value || "").trim();
+    const body  = (msgBody.value  || "").trim();
+
+    if(!title || !body){
+      setStatus("رجاءً اكتب عنوان الرسالة ونص الرسالة.", false);
+      showToast("أكمل الحقول قبل الإرسال.");
+      return;
+    }
+
+    try{
+      const listRef   = ref(db, ROOT_PATH);
+      const newMsgRef = push(listRef);
+      const now       = Date.now();
+
+      await set(newMsgRef, {
+        title,
+        body,
+        createdAt: now
+      });
+
+      setStatus("تم إرسال الرسالة وتخزينها في القاعدة.", true);
+      showToast("تم إرسال الرسالة بنجاح.");
+
+      // إضافة للجدول مباشرة
+      allMessages.push({
+        id:newMsgRef.key,
+        title, body, createdAt: now
+      });
+      allMessages.sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+      renderTable(allMessages);
+
+      // يمكن تفرغ الحقول إذا أحببت
+      // msgTitle.value = "";
+      // msgBody.value  = "";
+
+    }catch(err){
+      console.error("خطأ أثناء إرسال الرسالة:", err);
+      setStatus("حدث خطأ أثناء الإرسال.", false);
+      showToast("حدث خطأ أثناء الإرسال.");
+    }
+  }
+
+  // بحث بالتاريخ (من الرسائل المحمّلة)
+  function searchByDate(){
+    const d = searchDate.value;
+    if(!d){
+      renderTable(allMessages);
+      return;
+    }
+    const filtered = allMessages.filter(m => dayKey(m.createdAt) === d);
+    renderTable(filtered);
+  }
+
+  // زر خروج
+  function exitPage(){
+    if(window.history.length > 1){
+      window.history.back();
+    }else{
+      window.close(); // قد لا يعمل دائماً، حسب المتصفح
+    }
+  }
+
+  /*************** ربط الأحداث *****************/
+  btnSend.addEventListener("click", sendMessage);
+  btnRefresh.addEventListener("click", loadMessages);
+  btnExit.addEventListener("click", exitPage);
+  btnSearch.addEventListener("click", searchByDate);
+
+  // تحميل الرسائل عند فتح الصفحة
+  loadMessages();
+</script>
+
+</body>
+</html>

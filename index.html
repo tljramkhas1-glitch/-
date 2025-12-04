@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول - فاست كوينز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo",sans-serif;
+      background:#f0f1f5 url("https://i.imgur.com/4N7Z9wk.jpg") center/cover no-repeat fixed;
+      color:#222;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(255,255,255,0.75);
+      z-index:0;
+    }
+
+    .login-wrapper{
+      position:relative;
+      z-index:1;
+      width:640px;
+      max-width:94vw;
+      background:#ffffff;
+      border-radius:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.30);
+      display:flex;
+      padding:20px 26px;
+    }
+
+    .login-form{
+      flex:1;
+      padding-inline-end:18px;
+      border-inline-end:1px solid #e0e2ea;
+    }
+
+    .login-title-small{
+      font-size:0.9rem;
+      color:#777;
+    }
+    .login-title-main{
+      font-size:1.3rem;
+      font-weight:700;
+      color:#1f2532;
+      margin-bottom:14px;
+    }
+
+    .field{
+      margin-bottom:10px;
+    }
+    .field label{
+      display:block;
+      font-size:0.8rem;
+      margin-bottom:3px;
+      color:#444;
+    }
+    .field-input-wrap{
+      position:relative;
+    }
+    .field input{
+      width:100%;
+      border-radius:4px;
+      border:1px solid #cdd2dd;
+      padding:7px 34px 7px 8px;
+      font-family:"Cairo",sans-serif;
+      font-size:0.9rem;
+      outline:none;
+      background:#fafbff;
+    }
+    .field input:focus{
+      border-color:#f4b019;
+      box-shadow:0 0 0 1px rgba(244,176,25,0.35);
+      background:#ffffff;
+    }
+    .field-icon{
+      position:absolute;
+      top:50%;
+      inset-inline-end:8px;
+      transform:translateY(-50%);
+      font-size:0.85rem;
+      color:#999;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:10px;
+      margin-top:8px;
+    }
+    .btn{
+      flex:1;
+      border:none;
+      border-radius:4px;
+      padding:8px 0;
+      font-size:0.9rem;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn-primary{
+      background:#f4b019;
+      color:#1c2340;
+    }
+    .btn-primary:hover{background:#f0a506;}
+    .btn-secondary{
+      background:#f3f4f7;
+      color:#333;
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:0.8rem;
+      min-height:18px;
+    }
+    .status.ok{color:#0c7a3a;}
+    .status.err{color:#c02626;}
+
+    .support{
+      margin-top:12px;
+      font-size:0.75rem;
+      color:#555;
+      line-height:1.6;
+    }
+    .support span{
+      font-weight:700;
+      color:#d41920;
+    }
+
+    .login-visual{
+      width:210px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .shield-wrap{
+      position:relative;
+      width:170px;
+      height:170px;
+    }
+    .shield-bg{
+      position:absolute;
+      inset:16px 10px 0 0;
+      background:#f4b019;
+      border-radius:26px;
+      transform:skewX(-8deg);
+      box-shadow:0 10px 20px rgba(0,0,0,0.25);
+    }
+    .shield-main{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .shield-main svg{
+      width:150px;
+      height:150px;
+    }
+
+    @media (max-width:700px){
+      .login-wrapper{
+        flex-direction:column-reverse;
+        padding:18px;
+      }
+      .login-form{
+        border:none;
+        padding-inline-end:0;
+        margin-top:10px;
+      }
+      .login-visual{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="overlay"></div>
+
+<div class="login-wrapper">
+
+  <div class="login-form">
+    <div class="login-title-small">Login</div>
+    <div class="login-title-main">تسجيل الدخول</div>
+
+    <div class="field">
+      <label for="userInput">اسم المستخدم</label>
+      <div class="field-input-wrap">
+        <input id="userInput" type="text" value="فاست كوينز">
+        <span class="field-icon">👤</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="passInput">الرمز / كلمة المرور</label>
+      <div class="field-input-wrap">
+        <input id="passInput" type="password" placeholder="•••••••••">
+        <span class="field-icon">🔒</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnCancel">إلغاء الأمر</button>
+      <button class="btn btn-primary" id="btnLogin">دخول</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+
+    <div class="support">
+      بيانات الدخول الافتراضية (في أول مرة فقط):<br>
+      اسم المستخدم: <strong></strong><br>
+      الرمز / كلمة المرور: <strong></strong><br>
+      بعد تغيير كلمة المرور من صفحة الإعدادات يتم اعتماد الكلمة الجديدة تلقائياً.
+    </div>
+  </div>
+
+  <div class="login-visual">
+    <div class="shield-wrap">
+      <div class="shield-bg"></div>
+      <div class="shield-main">
+        <svg viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1f3d7a"/>
+              <stop offset="1" stop-color="#091530"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#g1)" stroke="#ffffff" stroke-width="2"
+                d="M32 6L14 12v18c0 12.5 7.5 20.9 18 24 10.5-3.1 18-11.5 18-24V12L32 6z"/>
+          <path fill="none" stroke="#ffffff" stroke-width="2.3" d="M25 30v-7a7 7 0 0 1 14 0v7"/>
+          <rect x="27" y="30" width="10" height="11" rx="2" fill="#ffffff"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- سكربت الدخول + قراءة كلمة المرور من Firebase -->
+<script type="module">
+  import {
+    initializeApp,
+    getApps,
+    getApp
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref as dbRef,
+    get
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  // نفس إعدادات مشروعك
+  const firebaseConfig = {
+    apiKey: "AIzaSyChQZ5_9wKz73-fONcTmipi54HUajwczkY",
+    authDomain: "fast-queens.firebaseapp.com",
+    projectId: "fast-queens",
+    storageBucket: "fast-queens.firebasestorage.app",
+    messagingSenderId: "651828148450",
+    appId: "1:651828148450:web:333947765bdd2d1e10c6bb",
+    measurementId: "G-L8X6CDY98L",
+    databaseURL: "https://fast-queens-default-rtdb.firebaseio.com"
+  };
+
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // عناصر الواجهة
+  const userInput = document.getElementById('userInput');
+  const passInput = document.getElementById('passInput');
+  const btnLogin  = document.getElementById('btnLogin');
+  const btnCancel = document.getElementById('btnCancel');
+  const statusBox = document.getElementById('statusBox');
+
+  function showStatus(msg, ok=false){
+    statusBox.textContent = msg;
+    statusBox.className = "status " + (ok ? "ok" : "err");
+  }
+
+  // القيم الافتراضية (لو القاعدة فاضية أو في خطأ)
+  let CURRENT_USER = "فاست كوينز";
+  let CURRENT_PASS = "781400883";
+  let authLoaded   = false;
+
+  async function loadAuth(){
+    try{
+      const snap = await get(dbRef(db, "systemAuth/admin"));
+      if(snap.exists()){
+        const v = snap.val() || {};
+        CURRENT_USER = v.username || CURRENT_USER;
+        CURRENT_PASS = v.password || CURRENT_PASS;
+      }else{
+        // لو ما فيش بيانات، نخزن الافتراضيات في القاعدة
+        await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js")
+          .then(({update}) =>
+            update(dbRef(db,"systemAuth/admin"),{
+              username: CURRENT_USER,
+              password: CURRENT_PASS
+            })
+          )
+          .catch(()=>{});
+      }
+      authLoaded = true;
+      showStatus("جاهز لتسجيل الدخول.", true);
+    }catch(err){
+      console.error("auth load error:", err);
+      authLoaded = true; // نسمح باستخدام الافتراضي
+      showStatus("تعذر الاتصال بالقاعدة، سيتم استخدام بيانات الدخول الافتراضية.", false);
+    }
+  }
+  loadAuth();
+
+  function handleLogin(){
+    const u = userInput.value.trim();
+    const p = passInput.value.trim();
+
+    if(!u || !p){
+      showStatus("أدخل اسم المستخدم والرمز أولاً.");
+      return;
+    }
+
+    if(!authLoaded){
+      showStatus("جاري تحميل بيانات الدخول... حاول بعد ثوانٍ.", false);
+      return;
+    }
+
+    if(u === CURRENT_USER && p === CURRENT_PASS){
+      showStatus("تم تسجيل الدخول بنجاح ✅", true);
+      setTimeout(()=>{
+        window.location.href = "index4.html"; // صفحتك الرئيسية
+      }, 800);
+    }else{
+      showStatus("بيانات الدخول غير صحيحة. حاول مرة أخرى.");
+    }
+  }
+
+  btnLogin.addEventListener('click', handleLogin);
+
+  passInput.addEventListener('keydown', e=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      handleLogin();
+    }
+  });
+
+  userInput.addEventListener('keydown', e=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      passInput.focus();
+    }
+  });
+
+  btnCancel.addEventListener('click', ()=>{
+    userInput.value = CURRENT_USER || "فاست كوينز";
+    passInput.value = "";
+    statusBox.textContent = "";
+    passInput.focus();
+  });
+</script>
+
+</body>
+</html>

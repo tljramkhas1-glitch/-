@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طلبات البيع والشراء - فاست كوينز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo",sans-serif;
+      background:#dcdfe3;
+      color:#222;
+    }
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* الإطار الكبير */
+    .panel{
+      margin:24px auto 10px;
+      width:100%;
+      max-width:1000px;
+      background:#e9eaec;
+      border:1px solid #888;
+      box-shadow:0 0 4px rgba(0,0,0,0.15);
+    }
+    .panel-header{
+      text-align:center;
+      padding:10px 0;
+      border-bottom:1px solid #555;
+      background:#f4f4f4;
+      font-size:1.15rem;
+      font-weight:700;
+    }
+    .panel-body{
+      padding:18px 26px 50px;
+    }
+
+    /* شبكة الحقول الرئيسية (عمودين) */
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      column-gap:40px;
+      row-gap:10px;
+    }
+    .field-row{
+      display:flex;
+      align-items:center;
+      margin-bottom:6px;
+    }
+    .field-label{
+      min-width:110px;
+      font-size:0.85rem;
+      color:#333;
+    }
+    .field-input-wrap{
+      flex:1;
+    }
+    .field-input{
+      width:100%;
+      border:1px solid #aaa;
+      background:#ffffff;
+      height:30px;
+      padding:4px 6px;
+      border-radius:2px;
+      font-size:0.85rem;
+      font-family:"Cairo",sans-serif;
+      outline:none;
+    }
+    .field-input:focus{
+      border-color:#007f4a;
+      box-shadow:0 0 0 1px #8fd7b2;
+    }
+
+    /* سطر البحث عن الرقم */
+    .search-row{
+      margin-bottom:18px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .search-row .field-label{
+      min-width:120px;
+    }
+
+    /* شريط أزرار أسفل الإطار */
+    .buttons-bar{
+      position:relative;
+      margin-top:26px;
+      border-top:1px solid #777;
+      padding-top:10px;
+      display:flex;
+      justify-content:space-between;
+    }
+    .btn-bar{
+      min-width:150px;
+      padding:8px 0;
+      border-radius:4px;
+      border:1px solid #0b5740;
+      background:linear-gradient(to bottom,#009b63,#c6d285);
+      color:#fff;
+      font-size:1rem;
+      cursor:pointer;
+      text-align:center;
+    }
+    .btn-bar:active{
+      transform:translateY(1px);
+    }
+
+    /* حالة الطلب */
+    .status-msg{
+      margin-top:10px;
+      font-size:0.82rem;
+      color:#444;
+    }
+    .status-msg span.badge{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      margin-right:4px;
+      font-size:0.78rem;
+    }
+    .badge.pending{
+      background:#fff5e6;
+      border:1px solid #ffc973;
+      color:#a05800;
+    }
+    .badge.approved{
+      background:#e6f5ef;
+      border:1px solid #9fd9bc;
+      color:#006437;
+    }
+
+    /* شريط بحث التاريخ + الجدول */
+    .table-container{
+      max-width:1000px;
+      margin:0 auto 24px;
+      background:#eceff2;
+      border:1px solid #8a8e98;
+      border-top:none;
+    }
+    .table-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:8px;
+      padding:6px 8px;
+      border-bottom:1px solid #c3c7d0;
+      background:#e0e3ea;
+      font-size:0.82rem;
+    }
+    .table-toolbar label{
+      min-width:90px;
+    }
+    .table-toolbar input[type="date"]{
+      border:1px solid #999;
+      padding:3px 6px;
+      border-radius:3px;
+      font-family:"Cairo",sans-serif;
+      font-size:0.8rem;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.8rem;
+    }
+    thead{
+      background:#d0d3db;
+    }
+    th,td{
+      padding:5px 6px;
+      border-bottom:1px solid #c3c7d0;
+      text-align:center;
+      white-space:nowrap;
+    }
+    tbody tr:nth-child(even){
+      background:#f7f8fa;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      bottom:14px;left:0;right:0;
+      margin:auto;
+      max-width:340px;
+      background:#333;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      text-align:center;
+      opacity:0;
+      transform:translateY(10px);
+      transition:.25s;
+      z-index:50;
+      font-size:0.8rem;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    @media (max-width:800px){
+      .panel-body{padding:14px 12px 46px;}
+      .form-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- الإطار الرئيسي -->
+  <div class="panel">
+    <div class="panel-header">طلبات البيع والشراء</div>
+    <div class="panel-body">
+
+      <!-- سطر البحث بالرقم -->
+      <div class="search-row">
+        <div class="field-label">بحث عن الرقم</div>
+        <div class="field-input-wrap">
+          <input id="refSearch" class="field-input" type="text" placeholder="مثال: FT123456789">
+        </div>
+      </div>
+
+      <!-- شبكة الحقول (فاضية في البداية) -->
+      <div class="form-grid">
+
+        <!-- العمود الأيسر -->
+        <div>
+          <div class="field-row">
+            <div class="field-label">رقم السند</div>
+            <div class="field-input-wrap"><input id="serial" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">الاسم الكامل</div>
+            <div class="field-input-wrap"><input id="fullName" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">رقم الهاتف</div>
+            <div class="field-input-wrap"><input id="phone" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">المعرّف / العنوان</div>
+            <div class="field-input-wrap"><input id="userId" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">المبلغ المطلوب</div>
+            <div class="field-input-wrap"><input id="amount" class="field-input" type="text" readonly></div>
+          </div>
+        </div>
+
+        <!-- العمود الأيمن -->
+        <div>
+          <div class="field-row">
+            <div class="field-label">الرقم المرجعي</div>
+            <div class="field-input-wrap"><input id="refCode" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">اسم المنصّة</div>
+            <div class="field-input-wrap"><input id="platform" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">طريقة الدفع</div>
+            <div class="field-input-wrap"><input id="payMethod" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">نوع المحفظة</div>
+            <div class="field-input-wrap"><input id="walletType" class="field-input" type="text" readonly></div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">بيانات إضافية</div>
+            <div class="field-input-wrap">
+              <input id="extraInfo" class="field-input" type="text" readonly>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- حالة الطلب -->
+      <div class="status-msg" id="statusMsg"></div>
+
+      <!-- أزرار أسفل الإطار -->
+      <div class="buttons-bar">
+        <button class="btn-bar" id="btnExit">خروج</button>
+        <button class="btn-bar" id="btnRefresh">تحديث</button>
+        <button class="btn-bar" id="btnApprove">اعتماد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- شريط تاريخ + جدول العمليات المعتمدة -->
+  <div class="table-container">
+    <div class="table-toolbar">
+      <label for="dateFilter">بحث بالتاريخ</label>
+      <input type="date" id="dateFilter">
+      <span style="font-size:0.78rem;color:#555;">اختر تاريخ الاعتماد لعرض العمليات في ذلك اليوم (اتركه فارغ لعرض الكل).</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>رقم السند</th>
+          <th>الرقم المرجعي</th>
+          <th>الاسم</th>
+          <th>الهاتف</th>
+          <th>المبلغ</th>
+          <th>طريقة الدفع</th>
+          <th>الحالة</th>
+          <th>تاريخ الاعتماد</th>
+        </tr>
+      </thead>
+      <tbody id="logBody">
+        <!-- يتم تعبئته من القاعدة -->
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase,
+    ref as dbRef,
+    get,
+    update
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  // إعدادات Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyChQZ5_9wKz73-fONcTmipi54HUajwczkY",
+    authDomain: "fast-queens.firebaseapp.com",
+    projectId: "fast-queens",
+    storageBucket: "fast-queens.firebasestorage.app",
+    messagingSenderId: "651828148450",
+    appId: "1:651828148450:web:333947765bdd2d1e10c6bb",
+    measurementId: "G-L8X6CDY98L",
+    databaseURL: "https://fast-queens-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // عناصر DOM
+  const refSearch  = document.getElementById('refSearch');
+  const serialIn   = document.getElementById('serial');
+  const fullNameIn = document.getElementById('fullName');
+  const phoneIn    = document.getElementById('phone');
+  const userIdIn   = document.getElementById('userId');
+  const amountIn   = document.getElementById('amount');
+  const refCodeIn  = document.getElementById('refCode');
+  const platformIn = document.getElementById('platform');
+  const payMethodIn= document.getElementById('payMethod');
+  const walletTypeIn=document.getElementById('walletType');
+  const extraInfoIn= document.getElementById('extraInfo');
+
+  const statusMsg  = document.getElementById('statusMsg');
+  const btnExit    = document.getElementById('btnExit');
+  const btnRefresh = document.getElementById('btnRefresh');
+  const btnApprove = document.getElementById('btnApprove');
+  const logBody    = document.getElementById('logBody');
+  const toast      = document.getElementById('toast');
+  const dateFilter = document.getElementById('dateFilter');
+
+  let currentKey  = null;
+  let currentData = null;
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2600);
+  }
+
+  function clearForm(){
+    currentKey = null;
+    currentData = null;
+    [serialIn, fullNameIn, phoneIn, userIdIn, amountIn,
+     refCodeIn, platformIn, payMethodIn, walletTypeIn, extraInfoIn]
+     .forEach(i=>i.value="");
+    statusMsg.innerHTML = "";
+  }
+
+  function fillForm(data){
+    serialIn.value    = data.serial    || "";
+    fullNameIn.value  = data.fullName || "";
+    phoneIn.value     = data.phone    || "";
+    userIdIn.value    = data.userId   || "";
+    amountIn.value    = data.amount   || "";
+    refCodeIn.value   = data.refCode  || "";
+    platformIn.value  = data.platform || "";
+    payMethodIn.value = data.payMethod|| "";
+    walletTypeIn.value= data.walletType||"";
+
+    const extraParts = [];
+    if(data.cashoutName)   extraParts.push("اسم سحب: "+data.cashoutName);
+    if(data.cashoutPhone)  extraParts.push("هاتف سحب: "+data.cashoutPhone);
+    if(data.cashoutAmount) extraParts.push("مبلغ سحب: "+data.cashoutAmount);
+    if(data.cashoutCode)   extraParts.push("كود: "+data.cashoutCode);
+    if(data.kuraimiType)   extraParts.push("كريمي: "+data.kuraimiType);
+    extraInfoIn.value = extraParts.join(" | ");
+
+    const approved = data.status === "approved";
+    statusMsg.innerHTML =
+      '<span class="badge '+(approved?'approved':'pending')+'">'+
+      (approved?'معتمد':'قيد المعالجة')+
+      '</span>' +
+      (approved? 'هذا الطلب تم اعتماده مسبقاً.' :
+                 'يمكنك اعتماد هذا الطلب بالضغط على زر "اعتماد" أو بالضغط على Enter مرة أخرى.');
+  }
+
+  // بحث في buyRequests بالرقم المرجعي
+  async function findByRef(refCode){
+    if(!refCode){
+      showToast("أدخل الرقم المرجعي أولاً.");
+      return;
+    }
+
+    clearForm();
+
+    try{
+      const snap = await get(dbRef(db, "buyRequests"));
+      if(!snap.exists()){
+        showToast("لا توجد أي طلبات في القاعدة.");
+        return;
+      }
+      const data = snap.val();
+      const keys = Object.keys(data);
+
+      let foundKey=null, found=null;
+      for(const k of keys){
+        const item = data[k];
+        if(item && item.refCode === refCode){
+          foundKey = k;
+          found    = item;
+          break;
+        }
+      }
+
+      if(!foundKey){
+        showToast("لا يوجد طلب بهذا الرقم المرجعي.");
+        return;
+      }
+
+      currentKey  = foundKey;
+      currentData = found;
+      fillForm(found);
+
+    }catch(err){
+      console.error("خطأ في البحث:", err);
+      showToast("حدث خطأ أثناء البحث: " + (err.code || err.message || ""));
+    }
+  }
+
+  async function approveCurrent(){
+    if(!currentKey || !currentData){
+      showToast("ابحث عن الطلب أولاً.");
+      return;
+    }
+    if(currentData.status === "approved"){
+      showToast("هذا الطلب معتمد مسبقاً.");
+      fillForm(currentData);
+      return;
+    }
+    try{
+      const now = Date.now();
+      await update(dbRef(db, "buyRequests/"+currentKey),{
+        status:"approved",
+        approvedAt:now
+      });
+      currentData.status = "approved";
+      currentData.approvedAt = now;
+      showToast("تم اعتماد الطلب بنجاح.");
+      clearForm();
+      loadLog(dateFilter.value || null);
+    }catch(err){
+      console.error("خطأ في الاعتماد:", err);
+      showToast("خطأ أثناء الاعتماد: " + (err.code || err.message || ""));
+    }
+  }
+
+  // تحميل العمليات المعتمدة إلى الجدول (مع فلتر تاريخ اختياري)
+  async function loadLog(dateStr = null){
+    logBody.innerHTML = "";
+    try{
+      const snap = await get(dbRef(db,"buyRequests"));
+      if(!snap.exists()) return;
+
+      const data = snap.val();
+      let rows = Object.values(data)
+        .filter(r => r && r.status === "approved")
+        .map(r => ({
+          serial:   r.serial || "",
+          refCode:  r.refCode||"",
+          fullName: r.fullName||"",
+          phone:    r.phone||"",
+          amount:   r.amount||"",
+          payMethod:r.payMethod||"",
+          status:   r.status||"",
+          approvedAt:r.approvedAt||null
+        }));
+
+      // فلتر بالتاريخ لو موجود (نحوّل approvedAt إلى YYYY-MM-DD)
+      if(dateStr){
+        rows = rows.filter(r=>{
+          if(!r.approvedAt) return false;
+          const d = new Date(r.approvedAt);
+          const dStr = d.toISOString().slice(0,10); // نفس تنسيق input date
+          return dStr === dateStr;
+        });
+      }
+
+      // ترتيب من الأحدث إلى الأقدم
+      rows.sort((a,b)=>(b.approvedAt||0)-(a.approvedAt||0));
+      rows = rows.slice(0,50);
+
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        const dateShow = r.approvedAt
+          ? new Date(r.approvedAt).toLocaleString('ar-EG')
+          : "";
+        tr.innerHTML = `
+          <td>${r.serial}</td>
+          <td>${r.refCode}</td>
+          <td>${r.fullName}</td>
+          <td>${r.phone}</td>
+          <td>${r.amount}</td>
+          <td>${r.payMethod}</td>
+          <td>${r.status === "approved" ? "معتمد" : r.status}</td>
+          <td>${dateShow}</td>
+        `;
+        logBody.appendChild(tr);
+      });
+    }catch(err){
+      console.error("خطأ في تحميل السجل:", err);
+    }
+  }
+
+  // Enter: أول ضغطة = بحث ، لو الطلب محمّل والثانية = اعتماد
+  refSearch.addEventListener('keydown', (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      if(!currentData){
+        findByRef(refSearch.value.trim());
+      }else{
+        approveCurrent();
+      }
+    }
+  });
+
+  // تغيير التاريخ ⇒ يعيد تحميل الجدول حسب التاريخ
+  dateFilter.addEventListener('change', ()=>{
+    loadLog(dateFilter.value || null);
+  });
+
+  // الأزرار
+  btnApprove.addEventListener('click', approveCurrent);
+  btnRefresh.addEventListener('click', ()=>loadLog(dateFilter.value || null));
+  btnExit.addEventListener('click', ()=>{
+    if(window.history.length > 1){
+      window.history.back();
+    }else{
+      window.close();
+    }
+  });
+
+  // تحميل الجدول عند فتح الصفحة
+  loadLog();
+</script>
+
+</body>
+</html>

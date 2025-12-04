@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تغيير كلمة المرور - فاست كوينز</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Cairo",sans-serif;
+      background:#e0e0e0;
+      color:#222;
+      direction:rtl;
+    }
+
+    .app{
+      max-width:800px;
+      margin:30px auto;
+      background:#dcdcdc;
+      padding:20px;
+      border:1px solid #bfbfbf;
+    }
+
+    .main-title-box{
+      border:1px solid #bfbfbf;
+      background:#ffffff;
+      padding:10px;
+      text-align:center;
+      margin-bottom:8px;
+    }
+    .main-title-box h1{
+      font-size:1.35rem;
+      font-weight:700;
+    }
+
+    .form-panel{
+      border:1px solid #bfbfbf;
+      background:#e6e6e6;
+      padding:22px 24px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .form-row{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:4px;
+    }
+    .form-row label{
+      width:150px;
+      font-size:0.95rem;
+    }
+    input[type="text"],
+    input[type="password"]{
+      flex:1;
+      font-family:"Cairo",sans-serif;
+      font-size:0.95rem;
+      border:1px solid #9c9c9c;
+      background:#ffffff;
+      padding:6px 8px;
+      outline:none;
+    }
+
+    .hint{
+      font-size:0.8rem;
+      color:#555;
+      margin-top:4px;
+    }
+
+    .buttons-row{
+      display:flex;
+      justify-content:flex-start;
+      margin-top:20px;
+      gap:10px;
+    }
+    .btn{
+      min-width:120px;
+      padding:8px 0;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:0.95rem;
+      color:#fff;
+      background:linear-gradient(to top,#007243,#62c392);
+    }
+    .btn:active{transform:scale(0.97);}
+    .btn-cancel{
+      background:linear-gradient(to top,#777,#c4c4c4);
+    }
+    .btn-exit{
+      margin-right:auto;
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:0.85rem;
+    }
+    .status.ok{color:#007a3c;}
+    .status.err{color:#b01919;}
+
+    .toast{
+      position:fixed;
+      bottom:10px;
+      left:0;right:0;
+      margin:auto;
+      max-width:320px;
+      background:#333;
+      color:#fff;
+      padding:8px 12px;
+      text-align:center;
+      border-radius:999px;
+      font-size:0.8rem;
+      opacity:0;
+      transform:translateY(10px);
+      transition:.25s;
+      z-index:100;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="main-title-box">
+    <h1>تغيير كلمة المرور - فاست كوينز</h1>
+  </div>
+
+  <div class="form-panel">
+    <div class="form-row">
+      <label>اسم المستخدم</label>
+      <input type="text" id="username" readonly>
+    </div>
+
+    <div class="form-row">
+      <label for="currentPass">كلمة المرور الحالية</label>
+      <input type="password" id="currentPass" autocomplete="current-password">
+    </div>
+
+    <div class="form-row">
+      <label for="newPass">كلمة المرور الجديدة</label>
+      <input type="password" id="newPass" autocomplete="new-password">
+    </div>
+
+    <div class="form-row">
+      <label for="confirmPass">تأكيد كلمة المرور الجديدة</label>
+      <input type="password" id="confirmPass" autocomplete="new-password">
+    </div>
+
+    <div class="hint">
+      ▪ يُفضّل أن تكون الكلمة الجديدة من 6 أرقام/حروف على الأقل.<br>
+      ▪ بعد الحفظ سيتم استخدام الكلمة الجديدة فوراً في صفحة تسجيل الدخول.
+    </div>
+
+    <div class="buttons-row">
+      <button class="btn" id="btnSave">حفظ التغييرات</button>
+      <button class="btn btn-cancel" id="btnReset">إلغاء / تفريغ الحقول</button>
+      <button class="btn btn-exit" id="btnExit">خروج</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import {
+    initializeApp,
+    getApps,
+    getApp
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref as dbRef,
+    get,
+    update
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyChQZ5_9wKz73-fONcTmipi54HUajwczkY",
+    authDomain: "fast-queens.firebaseapp.com",
+    projectId: "fast-queens",
+    storageBucket: "fast-queens.firebasestorage.app",
+    messagingSenderId: "651828148450",
+    appId: "1:651828148450:web:333947765bdd2d1e10c6bb",
+    measurementId: "G-L8X6CDY98L",
+    databaseURL: "https://fast-queens-default-rtdb.firebaseio.com"
+  };
+
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // عناصر الصفحة
+  const usernameEl    = document.getElementById("username");
+  const currentPassEl = document.getElementById("currentPass");
+  const newPassEl     = document.getElementById("newPass");
+  const confirmPassEl = document.getElementById("confirmPass");
+  const btnSave       = document.getElementById("btnSave");
+  const btnReset      = document.getElementById("btnReset");
+  const btnExit       = document.getElementById("btnExit");
+  const statusBox     = document.getElementById("statusBox");
+  const toast         = document.getElementById("toast");
+
+  let CURRENT_USER = "فاست كوينز";
+  let CURRENT_PASS = "781400883";
+  let authLoaded   = false;
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),2300);
+  }
+
+  function setStatus(msg, ok=true){
+    statusBox.textContent = msg;
+    statusBox.className = "status " + (ok ? "ok" : "err");
+  }
+
+  async function loadAuth(){
+    setStatus("جاري تحميل بيانات الدخول ...", true);
+    try{
+      const snap = await get(dbRef(db,"systemAuth/admin"));
+      if(snap.exists()){
+        const v = snap.val() || {};
+        CURRENT_USER = v.username || CURRENT_USER;
+        CURRENT_PASS = v.password || CURRENT_PASS;
+      }
+      usernameEl.value = CURRENT_USER;
+      authLoaded = true;
+      setStatus("يمكنك الآن تغيير كلمة المرور.", true);
+    }catch(err){
+      console.error("loadAuth error:", err);
+      authLoaded = false;
+      setStatus("تعذر تحميل بيانات الدخول من القاعدة.", false);
+      showToast("خطأ في الاتصال بقاعدة البيانات.");
+    }
+  }
+  loadAuth();
+
+  async function saveNewPassword(){
+    if(!authLoaded){
+      setStatus("لم يتم تحميل بيانات الدخول بعد.", false);
+      return;
+    }
+
+    const current = currentPassEl.value.trim();
+    const next    = newPassEl.value.trim();
+    const conf    = confirmPassEl.value.trim();
+
+    if(!current || !next || !conf){
+      setStatus("رجاءً املأ جميع الحقول.", false);
+      showToast("أكمل الحقول أولاً.");
+      return;
+    }
+
+    if(current !== CURRENT_PASS){
+      setStatus("كلمة المرور الحالية غير صحيحة.", false);
+      showToast("الكلمة الحالية خطأ.");
+      return;
+    }
+
+    if(next.length < 6){
+      setStatus("الكلمة الجديدة قصيرة جداً (6 رموز فأكثر).", false);
+      return;
+    }
+
+    if(next !== conf){
+      setStatus("تأكيد كلمة المرور لا يطابق الجديدة.", false);
+      return;
+    }
+
+    try{
+      await update(dbRef(db,"systemAuth/admin"),{
+        password: next
+      });
+
+      CURRENT_PASS = next;
+      currentPassEl.value = "";
+      newPassEl.value     = "";
+      confirmPassEl.value = "";
+
+      setStatus("تم تغيير كلمة المرور بنجاح ✅", true);
+      showToast("تم حفظ كلمة المرور الجديدة.");
+
+    }catch(err){
+      console.error("update password error:", err);
+      setStatus("حدث خطأ أثناء حفظ التغيير.", false);
+      showToast("خطأ أثناء الحفظ.");
+    }
+  }
+
+  btnSave.addEventListener("click", saveNewPassword);
+
+  btnReset.addEventListener("click", ()=>{
+    currentPassEl.value = "";
+    newPassEl.value     = "";
+    confirmPassEl.value = "";
+    setStatus("", true);
+  });
+
+  btnExit.addEventListener("click", ()=>{
+    if(window.top !== window){
+      window.top.postMessage({type:"closeModule"},"*");
+    }else{
+      window.close();
+    }
+  });
+
+  // Enter = حفظ
+  [currentPassEl,newPassEl,confirmPassEl].forEach(inp=>{
+    inp.addEventListener("keydown",e=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        saveNewPassword();
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
